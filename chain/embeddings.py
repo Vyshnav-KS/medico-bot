@@ -1,11 +1,10 @@
 from langchain_cohere import CohereEmbeddings
-import streamlit as st
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-async def get_embedding():
+def get_embedding():
     try:
         embeddings = CohereEmbeddings(
             cohere_api_key=os.environ['COHERE_API_KEY'], 
@@ -13,5 +12,5 @@ async def get_embedding():
         )
         return embeddings
     except Exception as e:
-        st.error(f"Error initializing embeddings: {e}")
+        print(f"Error initializing embeddings: {e}")
         return None

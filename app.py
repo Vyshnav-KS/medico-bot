@@ -39,6 +39,6 @@ if user_query is not None and user_query != "":
         try:
             response = st.write_stream(get_response(user_query, st.session_state.chat_history, context))
         except Exception as e:
-            response = st.write_stream("Network Error")
+            response = st.write("Network Error")
             print(e)
     st.session_state.chat_history.append(AIMessage(content=response))

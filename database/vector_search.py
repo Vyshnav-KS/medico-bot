@@ -1,13 +1,16 @@
 from pinecone import Pinecone
 from openai import OpenAI
-import streamlit as st
+# import streamlit as st
 from pinecone import ServerlessSpec
 from langchain_pinecone import PineconeVectorStore
 import os
 from chain.embeddings import get_embedding
 from dotenv import load_dotenv
+import asyncio
+from langchain_cohere import CohereEmbeddings
 
 load_dotenv()
+
 
 # Initialize Pinecone client
 # def client_init():
@@ -35,7 +38,7 @@ load_dotenv()
 #         return None
 
 # Retrieve relevant documents based on the query
-async def get_retriever(query):
+def get_retriever(query):
     final_content = ""
     # index_name = client_init()
     index_name = 'medulla'
@@ -45,18 +48,22 @@ async def get_retriever(query):
 
     try:
         # cohere embedding
-        embeddings = await get_embedding()
+        embeddings = get_embedding()
         docsearch = PineconeVectorStore(index_name=index_name, embedding=embeddings)
         
         # similarity search
-        vdb_results = await docsearch.similarity_search(query, k=4)
+        vdb_results = docsearch.similarity_search(query, k=4)
         
         if vdb_results:
             for content in vdb_results:
                 final_content += content.page_content
         
+        print(final_content)
+        
         return final_content
 
     except Exception as e:
-        st.error(f"Error retrieving documents: {e}")
+        print(f"Error retrieving documents: {e}")
         return "Error retrieving documents."
+
+# asyncio.run(get_retriever("Is there any association between smoking and GERD ?"))
