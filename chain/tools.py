@@ -2,11 +2,12 @@ import streamlit as st
 from langchain.agents import Tool
 from langchain.tools import BaseTool
 
-def toggle_bot_name():
-    if "bot_name" not in st.session_state:
-        st.session_state.bot_name = "Medico"    
-    st.session_state.bot_name = "Medbuddy" if st.session_state.bot_name == "Medico" else "Medico"
-    return st.session_state.bot_name
+def toggle_bot_name(input=""):
+    if "app_title" not in st.session_state:
+        st.session_state.app_title = "Medico"    
+    st.session_state.app_title = "Medbuddy" if st.session_state.app_title == "Medico" else "Medico"
+    st.title(st.session_state.app_title)
+    return st.session_state.app_title
 
 change_name_tool = Tool(
     name="Change Name",

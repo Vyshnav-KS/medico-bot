@@ -52,13 +52,14 @@ def get_retriever(query):
         docsearch = PineconeVectorStore(index_name=index_name, embedding=embeddings)
         
         # similarity search
+        print("Similarity search initiated...")
         vdb_results = docsearch.similarity_search(query, k=4)
         
         if vdb_results:
             for content in vdb_results:
                 final_content += content.page_content
         
-        print(final_content)
+        print(f"Final content: {final_content[:20]}")
         
         return final_content
 

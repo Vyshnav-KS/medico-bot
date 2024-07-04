@@ -17,6 +17,7 @@ if "chat_history" not in st.session_state:
         AIMessage(content="Hello, I'm Medico, your personal assistant for all your medical inquiries. How can I assist you today?"),
     ]
 
+
 # conversation --------------
 for message in st.session_state.chat_history:
     if isinstance(message, AIMessage):
@@ -37,8 +38,12 @@ if user_query is not None and user_query != "":
 
     with st.chat_message("AI"):
         try:
-            response = st.write_stream(get_response(user_query, st.session_state.chat_history, context))
+            output = get_response(user_query, st.session_state.chat_history, context)
+            response = output.get("output")
+            st.write(response)
         except Exception as e:
             response = st.write("Network Error")
             print(e)
-    st.session_state.chat_history.append(AIMessage(content=response))
+        if response:
+            st.session_state.chat_history.append(AIMessage(content=response))
+    
