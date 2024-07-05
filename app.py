@@ -1,11 +1,12 @@
 import streamlit as st
 from langchain_core.messages import AIMessage, HumanMessage
 from dotenv import load_dotenv
-from chain.lc_chain import get_response
+from chain.response_generator import get_response
 import langchain
-from database.vector_search import get_retriever
+
 langchain.verbose = False
 langchain.debug = False
+
 
 load_dotenv()
 
@@ -29,7 +30,6 @@ for message in st.session_state.chat_history:
 
 # user input -------------------
 user_query = st.chat_input("Type your message here...")
-context = get_retriever(user_query)
 if user_query is not None and user_query != "":
     st.session_state.chat_history.append(HumanMessage(content=user_query))
 
@@ -38,12 +38,11 @@ if user_query is not None and user_query != "":
 
     with st.chat_message("AI"):
         try:
-            output = get_response(user_query, st.session_state.chat_history, context)
-            response = output.get("output")
-            st.write(response)
+            response = get_response(user_query, st.session_state.chat_history)
+            content = response["output"]
+            st.write(content)
+            st.session_state.chat_history.append(AIMessage(content))
         except Exception as e:
-            response = st.write("Network Error")
+            content = st.write("Network Error")
             print(e)
-        if response:
-            st.session_state.chat_history.append(AIMessage(content=response))
     
