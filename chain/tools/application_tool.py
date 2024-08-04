@@ -1,11 +1,12 @@
 from langchain.tools import BaseTool
 import streamlit as st
+from config.settings import settings
 
 class ApplicationTool(BaseTool):
-    name="Celebrations"
-    description="Give response to the user for only on special occasions like birthdays, anniversery etc."
-
+    name=settings.application_tool_settings.name
+    description=settings.application_tool_settings.description
     def _run(self, query: str =""):
+        print("Application tool")
         st.balloons()   
 
 

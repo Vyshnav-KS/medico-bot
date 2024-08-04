@@ -1,11 +1,15 @@
 from langchain.tools import BaseTool
-from database.vector_search import get_retriever
+from helper.similarity_search import get_retriever
+from langsmith import traceable
+from config.settings import settings
 
 class MedicalTool(BaseTool):
-    name= "Medical Tool"
-    description="Returns answer for medical queries, medical-related questions."
+    name= settings.medical_tool_settings.name
+    description=settings.medical_tool_settings.description
 
+    @traceable
     def _run(self, query: str):
+        print("Running medical tool")
         try:
             final_content = ""   
 
