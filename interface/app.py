@@ -38,10 +38,11 @@ if user_query is not None and user_query != "":
 
     with st.chat_message("AI"):
         try:
-            response = st.write_stream(get_response(user_query, st.session_state.chat_history))
-            # content = response["output"]
-            # st.write(content)
-            st.session_state.chat_history.append(AIMessage(response))
+            response = get_response(user_query, st.session_state.chat_history)
+            # response = st.write_stream(get_response(user_query, st.session_state.chat_history))
+            content = response["output"]
+            st.write(content)
+            st.session_state.chat_history.append(AIMessage(content))
         except Exception as e:
             # content = st.write("Network Error")
             print(e)
