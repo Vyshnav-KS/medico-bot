@@ -10,7 +10,7 @@ def get_embedding():
     try:
         embeddings = CohereEmbeddings(
             cohere_api_key=os.environ['COHERE_API_KEY'], 
-            model=settings.cohere_embedding_settings.model_name
+            model=settings.cohere_embedding_settings.model
         )
         return embeddings
     except Exception as e:

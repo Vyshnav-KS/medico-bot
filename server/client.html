@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Response Streaming</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #response {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            border: 1px solid #ccc;
+            padding: 10px;
+            max-width: 100%;
+            height: 300px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+
+        button, input[type="text"] {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Response Streaming</h1>
+    <input type="text" id="userInput" placeholder="Enter your message">
+    <button id="sendButton">Send Message</button>
+    <pre id="response"></pre>
+
+    <script>
+        const socket = io('http://localhost:5001');
+
+        // Event listener for the button to send a message
+        document.getElementById('sendButton').addEventListener('click', () => {
+            const userInput = document.getElementById('userInput').value;
+            if (userInput.trim() !== "") {
+                socket.emit('send_message', userInput);
+            }
+        });
+
+        // Listen for the 'ai_res' event to receive tokens
+        socket.on('ai_res', (token) => {
+            document.getElementById('response').textContent += token;
+        });
+
+        // Listen for general messages
+        socket.on('message', (message) => {
+            console.log('Server message:', message);
+        });
+    </script>
+</body>
+</html>

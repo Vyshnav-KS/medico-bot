@@ -3,6 +3,8 @@ from chain.prompts.system_prompt import system_instruction
 from langchain.agents import AgentExecutor, create_react_agent
 from langchain.chains.conversation.memory import ConversationBufferWindowMemory
 # from langchain.memory import ChatMessageHistory
+from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOutCallbackHandler
+from langchain.callbacks.streaming_aiter import AsyncIteratorCallbackHandler
 from chain.tools.medical_tool import medical_tool
 from chain.tools.general_tool import general_tool
 from chain.tools.application_tool import application_tool
@@ -13,11 +15,62 @@ from langsmith import traceable
 from config.settings import settings
 from langchain import hub
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from helper.history import get_chat_history
+from typing import Any
+from langchain_core.outputs import LLMResult
+import asyncio
+from langchain_core. callbacks import StdOutCallbackHandler
 
 # set_llm_cache(InMemoryCache())
 
+class MyCallbackHandler(AsyncIteratorCallbackHandler):
+    def __init__(self):
+        # Initialize instance variables instead of using global variables
+        self.content_checker = True
+        self.start_stream = False
+        self.check_colon = False
+        self.content = ""
+        self.done = asyncio.Event()
+        self.queue = asyncio.Queue()
+
+    async def on_llm_new_token(self, token: str, **kwargs: Any) -> Any:
+        """Run on new LLM token. Only available when streaming is enabled."""
+        if self.content_checker:
+            self.content += token
+
+        if self.content_checker and "Final" in self.content:
+            self.check_colon = True
+            self.content = ""
+
+        if self.check_colon and ":" in self.content:
+            self.content_checker = False
+            self.start_stream = True
+            self.check_colon = False
+            self.content = ""
+            return
+            
+        if self.start_stream:
+            await self.queue.put(token)
+            print("TOKEN: ", token)
+    
+    async def aiter(self):
+        """Async iterator to yield tokens."""
+        while not self.done.is_set() or not self.queue.empty():
+            token = await self.queue.get()
+            print(f"Yielding token: {token}")  # Debug log
+            yield token
+    
+    
+    async def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
+        # Reset instance variables at the end of the response
+        self.content_checker = True
+        self.start_stream = False
+        self.check_colons = False
+        self.content = ""
+        self.done.set()
+
 @traceable
-def get_response(user_query, chat_history):
+async def get_response(input_text, chat_history, handler):
 
     load_dotenv()
     tools = [application_tool, medical_tool, general_tool]
@@ -28,41 +81,49 @@ def get_response(user_query, chat_history):
         # base_prompt = hub.pull("hwchase17/react")
         prompt = base_prompt.partial(instructions=instructions)
 
-        memory = ConversationBufferWindowMemory(
-            memory_key='chat_history', 
-            k=5, 
-            return_messages=True
-            )
-
-        model = AzureChatOpenAI(model=settings.azure_openai_settings.model, openai_api_type=settings.azure_openai_settings.openai_api_type)
+        model = AzureChatOpenAI(model=settings.azure_openai_settings.model, openai_api_type=settings.azure_openai_settings.openai_api_type,
+                                callbacks=[FinalStreamingStdOutCallbackHandler(
+        answer_prefix_tokens = ["Final", "Answer"],)], streaming=True)
 
         agent = create_react_agent(model, tools, prompt)
         agent_executor = AgentExecutor(
             agent=agent, 
             tools=tools, 
             handle_parsing_errors=True, 
-            memory=memory,
             max_iterations=3,
-            verbose=True,
+            verbose=False,
+            return_intermediate_steps=False,
+            early_stopping_method="generate",
             )
         
-        print(f"User query: {user_query}\nChat history: {chat_history}\n")
+        # print(f"User query: {user_query}\nChat history: {chat_history}\n")
 
-        agent_with_history = RunnableWithMessageHistory(
-            agent_executor,
-            lambda session_id: memory,
-            input_messages_key="input",
-            history_messages_key="chat_history"
-        )
-
-        agent_response = agent_with_history.invoke({
-            "input": f"User question: {user_query}",
+        # return agent_executor
+        response  = await agent_executor.ainvoke({
+            "input": input_text,
             "chat_history": chat_history,
         },
-        config={"configurable": {"session_id": "<foo>"}},
-        )
-        print(f"Agent response ---> {agent_response}")
-        return agent_response
+        {"callbacks": [handler]},
+    )
+        return response
+        
     except Exception as e:
         print(e)
-        return None
+
+async def create_gen(query: str, chat_history: list, handler):
+    task = asyncio.create_task(get_response(query, chat_history, handler))
+    async for token in handler.aiter():
+        # print("Token: ", token)
+        print(f"Yielding token: {token}") 
+        yield token
+    await task
+
+
+# async def main():
+#     chat_history = []
+#     user_query = "What is Myopia?"
+#     async for token in create_gen(user_query, chat_history):
+#         print(token)
+
+# if __name__ == "__main__":
+#     asyncio.run(main())

@@ -5,14 +5,14 @@ class AzureOpenAISettings(BaseSettings):
     openai_api_type: str = "azure"
 
 class CohereEmbeddingSettings(BaseSettings):
-    model_name: str = "embed-english-light-v3.0"
+    model: str = "embed-english-light-v3.0"
 
 class SimilaritySeachSettings(BaseSettings):
     index_name: str = "medulla"
     no_of_samples: int = 5
 
 class GeneralToolSettings(BaseSettings):
-    name: str = "General Tool"
+    name: str = "GeneralTool"
     description: str = "Give response for generic questions."
 
 class ApplicationToolSettings(BaseSettings):
@@ -20,7 +20,7 @@ class ApplicationToolSettings(BaseSettings):
     description: str = "Give response to the user for only on special occasions like birthdays, anniversary etc."
 
 class MedicalToolSettings(BaseSettings):
-    name: str = "Medical Tool"
+    name: str = "MedicalTool"
     description: str = "Returns answer for medical queries, medical-related questions."
 
 class Settings():
