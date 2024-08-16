@@ -48,15 +48,19 @@ async def websocket_endpoint(websocket: WebSocket, token: str):
             handler = MyCallbackHandler()
 
             query = await websocket.receive_text()
+            print("Received Text: ", query)
             await websocket.send_text(f"Query: {query}, ---user :{user['user_id']} ---")
-
+            print("::::::::::::::::::::::::>>>>>>>>>>>>>>>>>>>", 1)
             # Create a generator to stream tokens
             async for token in create_gen(query, [], handler):  # Pass empty chat history for now
+                # print(1.1)
                 await websocket.send_text(token)
+                # print(1.2)
                 # await asyncio.sleep(0.1)
-
+            print("::::::::::::::::::::::::>>>>>>>>>>>>>>>>>>>", 2)
             # Optional: Send a completion message
             await websocket.send_text("----TOKEN PRINTING COMPLETED----")
+            print("::::::::::::::::::::::::>>>>>>>>>>>>>>>>>>>", 3)
 
     except WebSocketDisconnect:
         print(f"Client disconnected: user_id {user['user_id']}")

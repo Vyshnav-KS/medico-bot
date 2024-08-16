@@ -12,7 +12,7 @@
         <div id='messages'>
         </div>
         <script>
-            var token = ''
+            var token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMTIzNDUiLCJzdWIiOiJ0ZXN0X3VzZXIiLCJleHAiOjE3MjM5NjIwNjJ9.0Ix0ODD-YPa-WBJ5YGXqFsIQ0iNh0QcmVq0CqAsHROk'
             var ws = new WebSocket("ws://localhost:8000/ws?token=" + token);
             ws.onmessage = function(event) {
                 var messages = document.getElementById('messages');
@@ -25,6 +25,7 @@
                 input.value = '';
                 event.preventDefault();
             }
+            document.querySelector("#messageText").focus()
         </script>
     </body>
 </html>
