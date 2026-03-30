@@ -1,37 +1,86 @@
 # Medico Bot
 
-## Overview
-Medico Bot is a specialized application designed to assist users in healthcare-related queries. The bot leverages advanced natural language processing (NLP) and machine learning algorithms to provide accurate and timely information.
+An AI-powered medical assistant chatbot built for medical students. It uses RAG (Retrieval Augmented Generation) to answer medical questions with cited PubMed references.
 
 ## Features
-- **Health Queries:** Answer a wide range of health-related questions.
-- **Medication Information:** Provide details about various medications, including dosage and side effects.
-- **Appointment Scheduling:** Assist users in scheduling medical appointments.
-- **Symptom Checker:** Help users identify possible health issues based on their symptoms.
 
-## Installation
-To use Medico Bot, follow these steps:
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Vyshnav-KS/medico-bot.git
-   ```
-2. Navigate into the project directory:
-   ```bash
-   cd medico-bot
-   ```
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
+- Conversational medical Q&A with multi-turn history
+- Semantic search over a medical knowledge base (Pinecone)
+- PubMed citations as clickable markdown links
+- ReAct agent pattern for reasoning and tool use
+- Built with Streamlit for a simple web UI
 
-## Usage
-After installation, you can start the bot by running:
-```bash
-npm start
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| UI | Streamlit |
+| LLM | OpenAI GPT-3.5-turbo |
+| Embeddings | Cohere (`embed-english-light-v3.0`) |
+| Vector DB | Pinecone (serverless) |
+| Agent Framework | LangChain ReAct |
+
+## Architecture
+
+```
+User Query
+    ↓
+Pinecone similarity search → retrieve top-k medical docs
+    ↓
+LangChain ReAct Agent (GPT-3.5-turbo) + chat history + context
+    ↓
+Response with PubMed citations
+    ↓
+Streamlit UI
 ```
 
-## Contributing
-Contributions are welcome! Please read the [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
+## Setup
 
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### 1. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Configure environment variables
+
+Create a `.env` file in the project root:
+
+```env
+OPENAI_API_KEY=your_openai_api_key
+COHERE_API_KEY=your_cohere_api_key
+PINECONE_API_KEY=your_pinecone_api_key
+```
+
+### 3. Pinecone index
+
+The app expects a Pinecone index named `medulla` with:
+- Dimension: `384`
+- Metric: `cosine`
+- Cloud: AWS `us-east-1` (serverless)
+
+### 4. Run
+
+```bash
+streamlit run app.py
+```
+
+App will be available at `http://localhost:8501`.
+
+## Project Structure
+
+```
+medico-bot/
+├── app.py                  # Streamlit entry point
+├── requirements.txt
+├── chain/
+│   ├── lc_chain.py         # LangChain agent setup
+│   ├── embeddings.py       # Cohere embeddings init
+│   ├── tools.py            # Agent tools
+│   └── prompts/
+│       └── system_prompt.py
+├── database/
+│   └── vector_search.py    # Pinecone similarity search
+└── config/
+    └── settings.py
+```
